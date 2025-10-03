@@ -1,3 +1,14 @@
-menu "Zephyr"
 source "Kconfig.zephyr"
+
+menu "Hello World Timer Config"
+
+config HELLO_WORLD_TIMER_INTERVAL
+  int "Hello World Timer Interval"
+  default 1500
+  range 10 600000
+
+config HELLO_WORLD_TIMER_START
+  int "Hello World Timer Start"
+  default 0
+  range 0 600000
 endmenu
