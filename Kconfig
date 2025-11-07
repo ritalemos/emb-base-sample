@@ -1,3 +1,20 @@
-menu "Zephyr"
 source "Kconfig.zephyr"
+
+menu "Configuration"
+
+config SNTP_HOSTNAME
+  string "Hostname SNTP"
+
+
+config WIFI_SSID
+  string "SSID Wi-Fi"
+
+config WIFI_PASSWD
+  string "Password"
+
+config LOCAL_TIME
+# time offset in minutes relative to UTC
+int "Local time conversion offset (minutes)"
+  default 0
+
 endmenu
