@@ -20,10 +20,10 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #define SNTP_PORT_STR "123"
 #define SNTP_RESPONSE_TIMEOUT K_MSEC(1000)
 #define APP_START_DELAY K_SECONDS(2)
-#define SNTP_BASE_SLEEP_MS 500
-#define SNTP_RANDOM_JITTER_MS 2000
 #define TIME_STR_BUFFER_SIZE 32
 #define TIME_FORMAT_STR_SIZE 64
+
+#define SNTP_REQUEST_INTERVAL K_SECONDS(10)
 
 #define SNTP_THREAD_PRIO 4
 #define LOGGER_THREAD_PRIO 3
@@ -95,7 +95,6 @@ int main(void)
     return 0;
 }
 
-
 static int setup_sntp_server(void)
 {
     int status;
@@ -164,7 +163,8 @@ static void handle_sntp_time_update(const struct sntp_time *sntp_result,
     gmtime_r(&local_time_seconds, local_tm_out);
 
     char time_format_str[TIME_FORMAT_STR_SIZE];
-    snprintf(time_format_str, sizeof(time_format_str), "%%a %%Y-%%m-%%d %%H:%%M:%%S %%Z%+d",
+    
+    snprintf(time_format_str, sizeof(time_format_str), "%%a %%Y-%%b-%%d %%H:%%M:%%S %%Z%+d",
          CONFIG_LOCAL_TIME);
 
     char time_buffer[TIME_STR_BUFFER_SIZE];
@@ -172,7 +172,6 @@ static void handle_sntp_time_update(const struct sntp_time *sntp_result,
 
     LOG_INF("[SNTP] Hora local atualizada: %s", time_buffer);
 }
-
 
 void time_logging_task(void *arg1, void *arg2, void *arg3)
 {
@@ -193,7 +192,7 @@ void time_logging_task(void *arg1, void *arg2, void *arg3)
             continue;
         }
 
-        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%%m-%d %H:%M:%S %Z",
+        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%b-%d %H:%M:%S %Z",
              &received_msg.timestamp);
         LOG_INF("[LOGGER] Relógio interno atualizado: %s", time_buffer);
     }
@@ -219,10 +218,10 @@ void update_interval_monitor_task(void *arg1, void *arg2, void *arg3)
             continue;
         }
 
-        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%%m-%d %H:%%M:%S %Z",
+        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%b-%d %H:%M:%S %Z",
              &previous_timestamp);
         LOG_DBG("[MONITOR] Hora da última execução: %s", time_buffer);
-        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%%m-%d %H:%%M:%S %Z",
+        strftime(time_buffer, sizeof(time_buffer) - 1, "%a %Y-%b-%d %H:%M:%S %Z",
              &current_msg.timestamp);
         LOG_DBG("[MONITOR] Hora da execução atual: %s", time_buffer);
 
@@ -273,7 +272,7 @@ void sntp_client_task(void *arg1, void *arg2, void *arg3)
         status = k_sem_take(&g_sntp_response_received_sem, SNTP_RESPONSE_TIMEOUT);
         if (status) {
             LOG_WRN("[SNTP] Timeout na resposta SNTP (%d)", status);
-            continue;
+            goto sleep;
         }
 
         handle_sntp_time_update(&g_last_sntp_result, &local_tm_result);
@@ -285,9 +284,7 @@ void sntp_client_task(void *arg1, void *arg2, void *arg3)
         }
 
 sleep:
-        int sleep_duration_ms =
-            SNTP_BASE_SLEEP_MS + (k_cycle_get_32() % SNTP_RANDOM_JITTER_MS);
-        k_sleep(K_MSEC(sleep_duration_ms));
+        k_sleep(SNTP_REQUEST_INTERVAL);
     }
 
     sntp_close_async(&sntp_socket_service);
