@@ -49,6 +49,30 @@ O sistema é composto por 4 threads principais que trabalham de forma independen
 - Calcula hash SHA-256 da placa
 - Publica resultado via ZBUS
 
+┌─────────────────────────────────────────────────────┐
+│           MECANISMOS DE COMUNICAÇÃO                 │
+└─────────────────────────────────────────────────────┘
+
+1. FILAS DE MENSAGENS (K_MSGQ):
+   ┌──────────────┐  sensor_queue   ┌──────────────┐
+   │   SENSOR     │ ────────────────→│   CONTROL    │
+   │   THREAD     │  vehicle_queue  │   THREAD     │
+   └──────────────┘ ────────────────→└──────────────┘
+                                            │
+                                  display_queue
+                                            ↓
+                                     ┌──────────────┐
+                                     │   DISPLAY    │
+                                     │   THREAD     │
+                                     └──────────────┘
+
+2. ZBUS:
+   ┌──────────────┐  camera_request  ┌──────────────┐
+   │   CONTROL    │ ─────────────────→│   CAMERA     │
+   │   THREAD     │  camera_response │   THREAD     │
+   └──────────────┘ ←─────────────────└──────────────┘
+
+  
 ### Comunicação Inter-Thread
 
 **Message Queues (K_MSGQ):**
