@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #define SENSOR_POLL_MS      20     /* Sensor queue polling interval */
 #define MAIN_LOOP_DELAY_MS  20     /* Main loop delay */
 
-#define MAX_SPEED_KMH       200    /* Maximum valid speed */
+#define MAX_SPEED_KMH       300    /* Maximum valid speed */
 
 /* ============================================================================
  * TYPE DEFINITIONS
