@@ -1,0 +1,4 @@
+name: camera_service
+build:
+  cmake: .
+  kconfig: Kconfig.camera_service

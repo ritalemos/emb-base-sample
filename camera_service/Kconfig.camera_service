@@ -1,0 +1,17 @@
+menu "Camera service support"
+config CAMERA_SERVICE
+    bool "Camera service"
+    default y
+    select ZBUS
+    select ZBUS_MSG_SUBSCRIBER
+    select TEST_RANDOM_GENERATOR
+
+if CAMERA_SERVICE
+
+config QEMU_ICOUNT
+    bool
+    default n
+
+endif
+
+endmenu
