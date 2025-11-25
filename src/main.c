@@ -1,44 +1,60 @@
-/*
- * Copyright (c) 2012-2014 Wind River Systems, Inc.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/kernel.h>
-#include <zephyr/zbus/zbus.h>
-#include "camera_service.h"
+#include <zephyr/logging/log.h>
+#include <zephyr/random/random.h>
+#include "display.h"
+#include "radar.h"
 
-ZBUS_MSG_SUBSCRIBER_DEFINE(msub_camera_evt);
+LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-ZBUS_CHAN_ADD_OBS(chan_camera_evt, msub_camera_evt, 3);
+/* Speed simulation parameters */
+#define SPEED_MIN_KMH 30
+#define SPEED_MAX_KMH 120
+#define READING_INTERVAL_S 2
 
+/* Vehicle detection sequence */
+static const vehicle_type_t detection_sequence[] = {
+    VEHICLE_LIGHT,
+    VEHICLE_HEAVY,
+    VEHICLE_HEAVY
+};
+
+/**
+ * @brief Generate simulated speed reading
+ * @return Random speed value between SPEED_MIN_KMH and SPEED_MAX_KMH
+ */
+static uint8_t simulate_speed_reading(void)
+{
+    uint32_t range = SPEED_MAX_KMH - SPEED_MIN_KMH + 1;
+    return SPEED_MIN_KMH + (sys_rand32_get() % range);
+}
+
+/**
+ * @brief Process vehicle detection event
+ * @param type Type of vehicle detected
+ */
+static void process_detection(vehicle_type_t type)
+{
+    uint8_t measured_speed = simulate_speed_reading();
+    display_show(measured_speed, type);
+    k_sleep(K_SECONDS(READING_INTERVAL_S));
+}
+
+/**
+ * @brief Main application entry point
+ * @return 0 on success
+ */
 int main(void)
 {
-	int err;
-	const struct zbus_channel *chan;
+    const size_t sequence_len = ARRAY_SIZE(detection_sequence);
+    
+    LOG_INF("Speed Radar System initialized");
+    LOG_INF("Reading interval: %d seconds", READING_INTERVAL_S);
+    
+    while (1) {
+        for (size_t i = 0; i < sequence_len; i++) {
+            process_detection(detection_sequence[i]);
+        }
+    }
 
-	while (1) {
-		k_msleep(1000);
-		err = camera_api_capture(K_FOREVER);
-		if (err) {
-			printk("Could not init capture. Error: %d\n", err);
-			continue;
-		}
-
-		struct msg_camera_evt rsp;
-
-		err = zbus_sub_wait_msg(&msub_camera_evt, &chan, &rsp, K_FOREVER);
-		if (err) {
-			printk("ERROR: %d\n", err);
-			continue;
-		}
-
-		if (rsp.type == MSG_CAMERA_EVT_TYPE_ERROR) {
-			printk("Camera service unavailable. Error code %d\n", rsp.error_code);
-		} else if (rsp.type == MSG_CAMERA_EVT_TYPE_DATA) {
-			printf("Current camera data: plate=%s, hash=%s\n", rsp.captured_data->plate,
-			       rsp.captured_data->hash);
-		}
-	}
-	return 0;
+    return 0;
 }

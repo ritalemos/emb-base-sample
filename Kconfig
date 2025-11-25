@@ -1,3 +1,33 @@
-menu "Zephyr"
 source "Kconfig.zephyr"
+
+menu "Speed Radar Configuration"
+
+config DISPLAY_ANSI_COLORS
+    bool "Enable ANSI colors in display"
+    default y
+    help
+      Enable colored output for status display (green/yellow/red).
+
+config DISPLAY_ALERT_PERCENT
+    int "Alert threshold percentage"
+    range 50 99
+    default 90
+    help
+      Percentage of speed limit that triggers warning status.
+      For example, 90% means warning at 54 km/h for a 60 km/h limit.
+
+config DISPLAY_LIMIT_LIGHT
+    int "Speed limit for light vehicles (km/h)"
+    range 30 130
+    default 60
+    help
+      Maximum allowed speed for light vehicles.
+
+config DISPLAY_LIMIT_HEAVY
+    int "Speed limit for heavy vehicles (km/h)"
+    range 30 130
+    default 40
+    help
+      Maximum allowed speed for heavy vehicles.
+
 endmenu

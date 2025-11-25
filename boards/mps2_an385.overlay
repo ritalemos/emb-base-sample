@@ -1,22 +1,14 @@
 #include <zephyr/dt-bindings/gpio/gpio.h>
 
 / {
-    aliases {
-        led0 = &led0;
-		led1 = &led1;
+    chosen {
+        zephyr,display = &dummy_dc;
     };
 
-    leds {
-		compatible = "gpio-leds";
-
-		led0: led0 {
-			gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
-			label = "GNSS LED";
-		};
-
-		led1: led1 {
-			gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
-			label = "LTE LED";
-		};
-	};
+    dummy_dc: dummy_dc {
+        compatible = "zephyr,dummy-dc";
+        status = "okay";
+        width = <80>;
+        height = <24>;
+    };
 };
