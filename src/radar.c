@@ -42,14 +42,6 @@ speed_check_t check_speed(uint8_t speed, vehicle_type_t type)
 {
     speed_check_t result;
 
-    /* Validate vehicle type */
-    if (type >= ARRAY_SIZE(speed_limits)) {
-        LOG_ERR("Invalid vehicle type: %d", type);
-        result.limit = 0;
-        result.status = STATUS_VIOLATION;
-        return result;
-    }
-
     /* Get limit and evaluate */
     result.limit = speed_limits[type];
     uint8_t threshold = get_warning_threshold(result.limit);
